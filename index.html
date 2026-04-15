@@ -1,1 +1,177 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<title>Cafunfo Online</title>
 
+<style>
+body {
+    margin: 0;
+    font-family: Arial;
+    background: #111;
+    color: white;
+    text-align: center;
+}
+
+.tela {
+    display: none;
+    padding: 20px;
+}
+
+.ativa {
+    display: block;
+}
+
+input {
+    display: block;
+    margin: 10px auto;
+    padding: 10px;
+    width: 220px;
+}
+
+button {
+    display: block;
+    margin: 10px auto;
+    padding: 12px;
+    width: 230px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.verde { background: #00c853; color: white; }
+.azul { background: #2979ff; color: white; }
+.laranja { background: orange; }
+.roxo { background: purple; color: white; }
+
+.produto {
+    border: 1px solid #444;
+    margin: 10px;
+    padding: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- TELA INICIAL -->
+<div id="home" class="tela ativa">
+    <h1>🌍 Bem-vindo ao Cafunfo Online</h1>
+
+    <button class="azul" onclick="mostrar('login')">Login</button>
+    <button class="verde" onclick="mostrar('criar')">Criar Conta</button>
+    <button class="laranja" onclick="mostrar('menu')">Menu</button>
+    <button class="roxo" onclick="mostrar('perfil')">Perfil</button>
+</div>
+
+<!-- LOGIN -->
+<div id="login" class="tela">
+    <h2>Login</h2>
+    <input id="loginNumero" placeholder="Número">
+    <input id="loginSenha" type="password" placeholder="Senha">
+    <button onclick="entrar()">Entrar</button>
+    <button onclick="mostrar('home')">Voltar</button>
+    <p id="msgLogin"></p>
+</div>
+
+<!-- CRIAR CONTA -->
+<div id="criar" class="tela">
+    <h2>Criar Conta</h2>
+    <input id="novoNumero" placeholder="Número">
+    <input id="novaSenha" type="password" placeholder="Senha">
+    <button onclick="criarConta()">Criar</button>
+    <button onclick="mostrar('home')">Voltar</button>
+</div>
+
+<!-- MENU -->
+<div id="menu" class="tela">
+    <h2>Menu</h2>
+    <button onclick="mostrar('mercado')">Ir ao Mercado</button>
+    <button onclick="mostrar('home')">Voltar</button>
+</div>
+
+<!-- PERFIL -->
+<div id="perfil" class="tela">
+    <h2>Meu Perfil</h2>
+    <p>Número:</p>
+    <p id="numPerfil"></p>
+    <button onclick="mostrar('home')">Voltar</button>
+</div>
+
+<!-- MERCADO -->
+<div id="mercado" class="tela">
+    <h2>🛒 Mercado</h2>
+
+    <input id="pesquisa" placeholder="Pesquisar..." onkeyup="filtrar()">
+
+    <div id="lista">
+        <div class="produto">📱 Telemóvel - 50.000kz</div>
+        <div class="produto">🏍 Motorizada - 200.000kz</div>
+        <div class="produto">👟 Ténis - 10.000kz</div>
+    </div>
+
+    <button onclick="mostrar('menu')">Voltar</button>
+</div>
+
+<script>
+// TROCAR TELAS
+function mostrar(id) {
+    let telas = document.getElementsByClassName("tela");
+    for (let i = 0; i < telas.length; i++) {
+        telas[i].classList.remove("ativa");
+    }
+    document.getElementById(id).classList.add("ativa");
+
+    // atualizar perfil
+    if(id === "perfil") {
+        document.getElementById("numPerfil").innerText = localStorage.getItem("numero") || "Não logado";
+    }
+}
+
+// CRIAR CONTA
+function criarConta() {
+    let n = document.getElementById("novoNumero").value;
+    let s = document.getElementById("novaSenha").value;
+
+    if(n === "" || s === "") {
+        alert("Preenche tudo!");
+        return;
+    }
+
+    localStorage.setItem("numero", n);
+    localStorage.setItem("senha", s);
+
+    alert("Conta criada!");
+    mostrar('login');
+}
+
+// LOGIN
+function entrar() {
+    let n = document.getElementById("loginNumero").value;
+    let s = document.getElementById("loginSenha").value;
+
+    let n2 = localStorage.getItem("numero");
+    let s2 = localStorage.getItem("senha");
+
+    if(n === n2 && s === s2) {
+        document.getElementById("msgLogin").innerText = "Login feito!";
+        setTimeout(() => mostrar('menu'), 1000);
+    } else {
+        document.getElementById("msgLogin").innerText = "Erro!";
+    }
+}
+
+// PESQUISA MERCADO
+function filtrar() {
+    let input = document.getElementById("pesquisa").value.toLowerCase();
+    let itens = document.getElementsByClassName("produto");
+
+    for(let i = 0; i < itens.length; i++) {
+        let texto = itens[i].innerText.toLowerCase();
+        itens[i].style.display = texto.includes(input) ? "block" : "none";
+    }
+}
+</script>
+
+</body>
+  </html>
