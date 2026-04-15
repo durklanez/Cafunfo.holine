@@ -14,16 +14,10 @@ body {
     text-align: center;
 }
 
-.tela {
-    display: none;
-    padding: 20px;
-}
+.tela { display: none; padding: 20px; }
+.ativa { display: block; }
 
-.ativa {
-    display: block;
-}
-
-input {
+input, textarea {
     display: block;
     margin: 10px auto;
     padding: 12px;
@@ -39,7 +33,6 @@ button {
     max-width: 300px;
     border: none;
     border-radius: 10px;
-    font-size: 16px;
 }
 
 .verde { background: #00c853; color: white; }
@@ -53,6 +46,11 @@ button {
     padding: 10px;
     border-radius: 10px;
 }
+
+img {
+    width: 100%;
+    max-width: 200px;
+}
 </style>
 </head>
 
@@ -61,7 +59,6 @@ button {
 <!-- INICIO -->
 <div id="inicio" class="tela ativa">
     <h1>🌍 Bem-vindo ao Cafunfo Online</h1>
-
     <button class="verde" onclick="mostrar('criar')">Criar Conta</button>
     <button class="azul" onclick="mostrar('login')">Login</button>
 </div>
@@ -71,19 +68,15 @@ button {
     <h2>Login</h2>
     <input id="loginNumero" placeholder="Número">
     <input id="loginSenha" type="password" placeholder="Senha">
-
     <button class="azul" onclick="entrar()">Entrar</button>
     <button onclick="mostrar('inicio')">Voltar</button>
-
-    <p id="msgLogin"></p>
 </div>
 
-<!-- CRIAR CONTA -->
+<!-- CRIAR -->
 <div id="criar" class="tela">
     <h2>Criar Conta</h2>
     <input id="novoNumero" placeholder="Número">
     <input id="novaSenha" type="password" placeholder="Senha">
-
     <button class="verde" onclick="criarConta()">Criar Conta</button>
     <button onclick="mostrar('inicio')">Voltar</button>
 </div>
@@ -91,19 +84,20 @@ button {
 <!-- MENU -->
 <div id="menu" class="tela">
     <h2>📂 Menu</h2>
-
     <button class="laranja" onclick="mostrar('mercado')">🛒 Mercado</button>
     <button class="verde" onclick="mostrar('publicar')">➕ Publicar Produto</button>
     <button class="roxo" onclick="mostrar('perfil')">👤 Perfil</button>
     <button onclick="logout()">Sair</button>
 </div>
 
-<!-- PUBLICAR PRODUTO -->
+<!-- PUBLICAR -->
 <div id="publicar" class="tela">
     <h2>📦 Publicar Produto</h2>
 
     <input id="nomeProduto" placeholder="Nome do produto">
     <input id="precoProduto" placeholder="Preço">
+    <textarea id="descProduto" placeholder="Descrição"></textarea>
+    <input type="file" id="fotoProduto">
 
     <button class="verde" onclick="publicarProduto()">Publicar</button>
     <button onclick="mostrar('menu')">Voltar</button>
@@ -112,8 +106,10 @@ button {
 <!-- PERFIL -->
 <div id="perfil" class="tela">
     <h2>👤 Meu Perfil</h2>
-    <p>Número:</p>
     <p id="numPerfil"></p>
+
+    <h3>📦 Meus Produtos</h3>
+    <div id="meusProdutos"></div>
 
     <button onclick="mostrar('menu')">Voltar</button>
 </div>
@@ -121,42 +117,37 @@ button {
 <!-- MERCADO -->
 <div id="mercado" class="tela">
     <h2>🛒 Mercado</h2>
-
-    <input id="pesquisa" placeholder="Pesquisar..." onkeyup="filtrar()">
-
     <div id="lista"></div>
-
     <button onclick="mostrar('menu')">Voltar</button>
 </div>
 
+<!-- PRODUTO GRANDE -->
+<div id="detalhe" class="tela">
+    <h2 id="detNome"></h2>
+    <img id="detImg">
+    <p id="detPreco"></p>
+    <p id="detDesc"></p>
+
+    <button class="verde">Comprar</button>
+    <button onclick="mostrar('mercado')">Voltar</button>
+</div>
+
 <script>
-// TROCAR TELAS
+let usuarioAtual = null;
+
+// TROCAR TELA
 function mostrar(id) {
-    let telas = document.getElementsByClassName("tela");
-    for (let i = 0; i < telas.length; i++) {
-        telas[i].classList.remove("ativa");
-    }
+    document.querySelectorAll(".tela").forEach(t => t.classList.remove("ativa"));
     document.getElementById(id).classList.add("ativa");
 
-    if(id === "perfil") {
-        document.getElementById("numPerfil").innerText =
-            localStorage.getItem("numero") || "Não logado";
-    }
-
-    if(id === "mercado") {
-        carregarProdutos();
-    }
+    if(id === "perfil") carregarPerfil();
+    if(id === "mercado") carregarProdutos();
 }
 
 // CRIAR CONTA
 function criarConta() {
-    let n = document.getElementById("novoNumero").value;
-    let s = document.getElementById("novaSenha").value;
-
-    if(n === "" || s === "") {
-        alert("Preenche tudo!");
-        return;
-    }
+    let n = novoNumero.value;
+    let s = novaSenha.value;
 
     localStorage.setItem("numero", n);
     localStorage.setItem("senha", s);
@@ -167,71 +158,102 @@ function criarConta() {
 
 // LOGIN
 function entrar() {
-    let n = document.getElementById("loginNumero").value;
-    let s = document.getElementById("loginSenha").value;
+    let n = loginNumero.value;
+    let s = loginSenha.value;
 
-    let n2 = localStorage.getItem("numero");
-    let s2 = localStorage.getItem("senha");
-
-    if(n === n2 && s === s2) {
+    if(n === localStorage.getItem("numero") && s === localStorage.getItem("senha")) {
+        usuarioAtual = n;
         mostrar('menu');
     } else {
-        document.getElementById("msgLogin").innerText = "Erro no login!";
+        alert("Erro!");
     }
 }
 
 // LOGOUT
 function logout() {
+    usuarioAtual = null;
     mostrar('inicio');
 }
 
 // PUBLICAR PRODUTO
 function publicarProduto() {
-    let nome = document.getElementById("nomeProduto").value;
-    let preco = document.getElementById("precoProduto").value;
+    let nome = nomeProduto.value;
+    let preco = precoProduto.value;
+    let desc = descProduto.value;
+    let file = fotoProduto.files[0];
 
-    if(nome === "" || preco === "") {
-        alert("Preenche tudo!");
-        return;
-    }
+    if(!file) return alert("Escolhe uma foto!");
 
-    let produtos = JSON.parse(localStorage.getItem("produtos")) || [];
+    let reader = new FileReader();
+    reader.onload = function() {
+        let produtos = JSON.parse(localStorage.getItem("produtos")) || [];
 
-    produtos.push({
-        nome: nome,
-        preco: preco
-    });
+        produtos.push({
+            nome, preco, desc,
+            img: reader.result,
+            dono: usuarioAtual
+        });
 
-    localStorage.setItem("produtos", JSON.stringify(produtos));
+        localStorage.setItem("produtos", JSON.stringify(produtos));
 
-    alert("Produto publicado!");
-    mostrar('mercado');
+        alert("Publicado!");
+        mostrar('mercado');
+    };
+
+    reader.readAsDataURL(file);
 }
 
-// CARREGAR PRODUTOS
+// CARREGAR MERCADO
 function carregarProdutos() {
     let lista = document.getElementById("lista");
     lista.innerHTML = "";
 
     let produtos = JSON.parse(localStorage.getItem("produtos")) || [];
 
-    produtos.forEach(p => {
+    produtos.forEach((p, i) => {
         let div = document.createElement("div");
         div.className = "produto";
-        div.innerText = p.nome + " - " + p.preco + " kz";
+
+        div.innerHTML = `
+            <img src="${p.img}">
+            <p>${p.nome}</p>
+            <p>${p.preco} kz</p>
+        `;
+
+        div.onclick = () => verDetalhe(i);
         lista.appendChild(div);
     });
 }
 
-// PESQUISA
-function filtrar() {
-    let input = document.getElementById("pesquisa").value.toLowerCase();
-    let itens = document.getElementsByClassName("produto");
+// DETALHE
+function verDetalhe(i) {
+    let p = JSON.parse(localStorage.getItem("produtos"))[i];
 
-    for(let i = 0; i < itens.length; i++) {
-        let texto = itens[i].innerText.toLowerCase();
-        itens[i].style.display = texto.includes(input) ? "block" : "none";
-    }
+    detNome.innerText = p.nome;
+    detImg.src = p.img;
+    detPreco.innerText = p.preco + " kz";
+    detDesc.innerText = p.desc;
+
+    mostrar('detalhe');
+}
+
+// PERFIL
+function carregarPerfil() {
+    numPerfil.innerText = usuarioAtual;
+
+    let lista = document.getElementById("meusProdutos");
+    lista.innerHTML = "";
+
+    let produtos = JSON.parse(localStorage.getItem("produtos")) || [];
+
+    produtos.forEach(p => {
+        if(p.dono === usuarioAtual) {
+            let div = document.createElement("div");
+            div.className = "produto";
+            div.innerHTML = `<img src="${p.img}"><p>${p.nome}</p>`;
+            lista.appendChild(div);
+        }
+    });
 }
 </script>
 
