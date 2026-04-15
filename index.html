@@ -50,6 +50,7 @@ button {
 img {
     width: 100%;
     max-width: 200px;
+    border-radius: 10px;
 }
 </style>
 </head>
@@ -106,6 +107,11 @@ img {
 <!-- PERFIL -->
 <div id="perfil" class="tela">
     <h2>👤 Meu Perfil</h2>
+
+    <input type="file" id="fotoPerfil" onchange="salvarFoto()">
+
+    <img id="imgPerfil" style="width:120px;height:120px;border-radius:50%;">
+
     <p id="numPerfil"></p>
 
     <h3>📦 Meus Produtos</h3>
@@ -121,14 +127,31 @@ img {
     <button onclick="mostrar('menu')">Voltar</button>
 </div>
 
-<!-- PRODUTO GRANDE -->
+<!-- DETALHE -->
 <div id="detalhe" class="tela">
     <h2 id="detNome"></h2>
     <img id="detImg">
     <p id="detPreco"></p>
     <p id="detDesc"></p>
 
-    <button class="verde">Comprar</button>
+    <button class="verde" onclick="abrirMapa()">Comprar</button>
+    <button onclick="mostrar('mercado')">Voltar</button>
+</div>
+
+<!-- MAPA -->
+<div id="mapa" class="tela">
+    <h2>📍 Negociação no Cafunfo</h2>
+
+    <iframe width="100%" height="300"
+        src="https://maps.google.com/maps?q=cafunfo&t=&z=13&ie=UTF8&iwloc=&output=embed">
+    </iframe>
+
+    <p>🔴 Vendedor | 🟢 Você</p>
+    <p>🤝 Em negociação</p>
+
+    <button class="azul" onclick="ligar()">📞 Ligar</button>
+    <button class="verde" onclick="mensagem()">💬 Mensagem</button>
+
     <button onclick="mostrar('mercado')">Voltar</button>
 </div>
 
@@ -146,23 +169,17 @@ function mostrar(id) {
 
 // CRIAR CONTA
 function criarConta() {
-    let n = novoNumero.value;
-    let s = novaSenha.value;
-
-    localStorage.setItem("numero", n);
-    localStorage.setItem("senha", s);
-
+    localStorage.setItem("numero", novoNumero.value);
+    localStorage.setItem("senha", novaSenha.value);
     alert("Conta criada!");
     mostrar('login');
 }
 
 // LOGIN
 function entrar() {
-    let n = loginNumero.value;
-    let s = loginSenha.value;
-
-    if(n === localStorage.getItem("numero") && s === localStorage.getItem("senha")) {
-        usuarioAtual = n;
+    if(loginNumero.value === localStorage.getItem("numero") &&
+       loginSenha.value === localStorage.getItem("senha")) {
+        usuarioAtual = loginNumero.value;
         mostrar('menu');
     } else {
         alert("Erro!");
@@ -177,33 +194,29 @@ function logout() {
 
 // PUBLICAR PRODUTO
 function publicarProduto() {
-    let nome = nomeProduto.value;
-    let preco = precoProduto.value;
-    let desc = descProduto.value;
     let file = fotoProduto.files[0];
-
-    if(!file) return alert("Escolhe uma foto!");
+    if(!file) return alert("Escolhe foto!");
 
     let reader = new FileReader();
     reader.onload = function() {
         let produtos = JSON.parse(localStorage.getItem("produtos")) || [];
 
         produtos.push({
-            nome, preco, desc,
+            nome: nomeProduto.value,
+            preco: precoProduto.value,
+            desc: descProduto.value,
             img: reader.result,
             dono: usuarioAtual
         });
 
         localStorage.setItem("produtos", JSON.stringify(produtos));
-
         alert("Publicado!");
         mostrar('mercado');
     };
-
     reader.readAsDataURL(file);
 }
 
-// CARREGAR MERCADO
+// CARREGAR PRODUTOS
 function carregarProdutos() {
     let lista = document.getElementById("lista");
     lista.innerHTML = "";
@@ -213,13 +226,7 @@ function carregarProdutos() {
     produtos.forEach((p, i) => {
         let div = document.createElement("div");
         div.className = "produto";
-
-        div.innerHTML = `
-            <img src="${p.img}">
-            <p>${p.nome}</p>
-            <p>${p.preco} kz</p>
-        `;
-
+        div.innerHTML = `<img src="${p.img}"><p>${p.nome}</p><p>${p.preco} kz</p>`;
         div.onclick = () => verDetalhe(i);
         lista.appendChild(div);
     });
@@ -237,9 +244,37 @@ function verDetalhe(i) {
     mostrar('detalhe');
 }
 
+// MAPA
+function abrirMapa() {
+    mostrar('mapa');
+}
+
+function ligar() {
+    alert("Ligando...");
+}
+
+function mensagem() {
+    alert("Mensagem...");
+}
+
 // PERFIL
+function salvarFoto() {
+    let file = fotoPerfil.files[0];
+    let reader = new FileReader();
+
+    reader.onload = function() {
+        localStorage.setItem("fotoPerfil", reader.result);
+        carregarPerfil();
+    };
+
+    reader.readAsDataURL(file);
+}
+
 function carregarPerfil() {
     numPerfil.innerText = usuarioAtual;
+
+    let foto = localStorage.getItem("fotoPerfil");
+    if(foto) imgPerfil.src = foto;
 
     let lista = document.getElementById("meusProdutos");
     lista.innerHTML = "";
