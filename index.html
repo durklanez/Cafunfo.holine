@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cafunfo Online</title>
 
+<!-- MAPA -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
 <style>
 body {
     margin: 0;
@@ -138,13 +142,11 @@ img {
     <button onclick="mostrar('mercado')">Voltar</button>
 </div>
 
-<!-- MAPA -->
+<!-- MAPA REAL -->
 <div id="mapa" class="tela">
     <h2>📍 Negociação no Cafunfo</h2>
 
-    <iframe width="100%" height="300"
-        src="https://maps.google.com/maps?q=cafunfo&t=&z=13&ie=UTF8&iwloc=&output=embed">
-    </iframe>
+    <div id="mapaReal" style="width:100%;height:300px;"></div>
 
     <p>🔴 Vendedor | 🟢 Você</p>
     <p>🤝 Em negociação</p>
@@ -158,7 +160,7 @@ img {
 <script>
 let usuarioAtual = null;
 
-// TROCAR TELA
+// TELAS
 function mostrar(id) {
     document.querySelectorAll(".tela").forEach(t => t.classList.remove("ativa"));
     document.getElementById(id).classList.add("ativa");
@@ -167,7 +169,7 @@ function mostrar(id) {
     if(id === "mercado") carregarProdutos();
 }
 
-// CRIAR CONTA
+// CONTA
 function criarConta() {
     localStorage.setItem("numero", novoNumero.value);
     localStorage.setItem("senha", novaSenha.value);
@@ -175,7 +177,6 @@ function criarConta() {
     mostrar('login');
 }
 
-// LOGIN
 function entrar() {
     if(loginNumero.value === localStorage.getItem("numero") &&
        loginSenha.value === localStorage.getItem("senha")) {
@@ -186,13 +187,12 @@ function entrar() {
     }
 }
 
-// LOGOUT
 function logout() {
     usuarioAtual = null;
     mostrar('inicio');
 }
 
-// PUBLICAR PRODUTO
+// PRODUTOS
 function publicarProduto() {
     let file = fotoProduto.files[0];
     if(!file) return alert("Escolhe foto!");
@@ -216,7 +216,6 @@ function publicarProduto() {
     reader.readAsDataURL(file);
 }
 
-// CARREGAR PRODUTOS
 function carregarProdutos() {
     let lista = document.getElementById("lista");
     lista.innerHTML = "";
@@ -232,7 +231,6 @@ function carregarProdutos() {
     });
 }
 
-// DETALHE
 function verDetalhe(i) {
     let p = JSON.parse(localStorage.getItem("produtos"))[i];
 
@@ -244,30 +242,60 @@ function verDetalhe(i) {
     mostrar('detalhe');
 }
 
-// MAPA
+// MAPA REAL
+let mapa;
+let marcadorUsuario;
+let marcadorVendedor;
+let cafunfo = [-8.766, 17.283];
+
 function abrirMapa() {
     mostrar('mapa');
+
+    setTimeout(() => {
+        if (!mapa) {
+            mapa = L.map('mapaReal').setView(cafunfo, 13);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
+            .addTo(mapa);
+        }
+
+        navigator.geolocation.watchPosition(pos => {
+            let lat = pos.coords.latitude;
+            let lon = pos.coords.longitude;
+
+            if (marcadorUsuario) {
+                marcadorUsuario.setLatLng([lat, lon]);
+            } else {
+                marcadorUsuario = L.circleMarker([lat, lon], {color: 'green'})
+                .addTo(mapa).bindPopup("Você");
+            }
+
+            let vendedorPos = [cafunfo[0] + 0.01, cafunfo[1] + 0.01];
+
+            if (marcadorVendedor) {
+                marcadorVendedor.setLatLng(vendedorPos);
+            } else {
+                marcadorVendedor = L.circleMarker(vendedorPos, {color: 'red'})
+                .addTo(mapa).bindPopup("Vendedor");
+            }
+
+            let grupo = L.featureGroup([marcadorUsuario, marcadorVendedor]);
+            mapa.fitBounds(grupo.getBounds(), {padding:[50,50]});
+        });
+    }, 500);
 }
 
-function ligar() {
-    alert("Ligando...");
-}
-
-function mensagem() {
-    alert("Mensagem...");
-}
+function ligar() { alert("Ligando..."); }
+function mensagem() { alert("Mensagem..."); }
 
 // PERFIL
 function salvarFoto() {
-    let file = fotoPerfil.files[0];
     let reader = new FileReader();
-
-    reader.onload = function() {
+    reader.onload = () => {
         localStorage.setItem("fotoPerfil", reader.result);
         carregarPerfil();
     };
-
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(fotoPerfil.files[0]);
 }
 
 function carregarPerfil() {
