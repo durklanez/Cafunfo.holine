@@ -55,13 +55,11 @@ button {
 <body>
 
 <!-- TELA INICIAL -->
-<div id="home" class="tela ativa">
+<div id="inicio" class="tela ativa">
     <h1>🌍 Bem-vindo ao Cafunfo Online</h1>
 
-    <button class="azul" onclick="mostrar('login')">Login</button>
     <button class="verde" onclick="mostrar('criar')">Criar Conta</button>
-    <button class="laranja" onclick="mostrar('menu')">Menu</button>
-    <button class="roxo" onclick="mostrar('perfil')">Perfil</button>
+    <button class="azul" onclick="mostrar('login')">Login</button>
 </div>
 
 <!-- LOGIN -->
@@ -69,8 +67,10 @@ button {
     <h2>Login</h2>
     <input id="loginNumero" placeholder="Número">
     <input id="loginSenha" type="password" placeholder="Senha">
-    <button onclick="entrar()">Entrar</button>
-    <button onclick="mostrar('home')">Voltar</button>
+
+    <button class="azul" onclick="entrar()">Entrar</button>
+    <button onclick="mostrar('inicio')">Voltar</button>
+
     <p id="msgLogin"></p>
 </div>
 
@@ -79,23 +79,27 @@ button {
     <h2>Criar Conta</h2>
     <input id="novoNumero" placeholder="Número">
     <input id="novaSenha" type="password" placeholder="Senha">
-    <button onclick="criarConta()">Criar</button>
-    <button onclick="mostrar('home')">Voltar</button>
+
+    <button class="verde" onclick="criarConta()">Criar Conta</button>
+    <button onclick="mostrar('inicio')">Voltar</button>
 </div>
 
 <!-- MENU -->
 <div id="menu" class="tela">
-    <h2>Menu</h2>
-    <button onclick="mostrar('mercado')">Ir ao Mercado</button>
-    <button onclick="mostrar('home')">Voltar</button>
+    <h2>📂 Menu</h2>
+
+    <button class="laranja" onclick="mostrar('mercado')">🛒 Mercado</button>
+    <button class="roxo" onclick="mostrar('perfil')">👤 Perfil</button>
+    <button onclick="logout()">Sair</button>
 </div>
 
 <!-- PERFIL -->
 <div id="perfil" class="tela">
-    <h2>Meu Perfil</h2>
+    <h2>👤 Meu Perfil</h2>
     <p>Número:</p>
     <p id="numPerfil"></p>
-    <button onclick="mostrar('home')">Voltar</button>
+
+    <button onclick="mostrar('menu')">Voltar</button>
 </div>
 
 <!-- MERCADO -->
@@ -122,9 +126,9 @@ function mostrar(id) {
     }
     document.getElementById(id).classList.add("ativa");
 
-    // atualizar perfil
     if(id === "perfil") {
-        document.getElementById("numPerfil").innerText = localStorage.getItem("numero") || "Não logado";
+        document.getElementById("numPerfil").innerText =
+            localStorage.getItem("numero") || "Não logado";
     }
 }
 
@@ -157,11 +161,16 @@ function entrar() {
         document.getElementById("msgLogin").innerText = "Login feito!";
         setTimeout(() => mostrar('menu'), 1000);
     } else {
-        document.getElementById("msgLogin").innerText = "Erro!";
+        document.getElementById("msgLogin").innerText = "Erro no login!";
     }
 }
 
-// PESQUISA MERCADO
+// LOGOUT
+function logout() {
+    mostrar('inicio');
+}
+
+// PESQUISA
 function filtrar() {
     let input = document.getElementById("pesquisa").value.toLowerCase();
     let itens = document.getElementsByClassName("produto");
@@ -174,4 +183,4 @@ function filtrar() {
 </script>
 
 </body>
-  </html>
+</html>
