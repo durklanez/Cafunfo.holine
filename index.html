@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cafunfo Online</title>
 
-<!-- MAPA -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
@@ -63,7 +62,7 @@ img {
 
 <!-- INICIO -->
 <div id="inicio" class="tela ativa">
-    <h1>🌍 Bem-vindo ao Cafunfo Online</h1>
+    <h1>🌍 Cafunfo Online</h1>
     <button class="verde" onclick="mostrar('criar')">Criar Conta</button>
     <button class="azul" onclick="mostrar('login')">Login</button>
 </div>
@@ -99,7 +98,7 @@ img {
 <div id="publicar" class="tela">
     <h2>📦 Publicar Produto</h2>
 
-    <input id="nomeProduto" placeholder="Nome do produto">
+    <input id="nomeProduto" placeholder="Nome">
     <input id="precoProduto" placeholder="Preço">
     <textarea id="descProduto" placeholder="Descrição"></textarea>
     <input type="file" id="fotoProduto">
@@ -110,7 +109,7 @@ img {
 
 <!-- PERFIL -->
 <div id="perfil" class="tela">
-    <h2>👤 Meu Perfil</h2>
+    <h2>👤 Perfil</h2>
 
     <input type="file" id="fotoPerfil" onchange="salvarFoto()">
 
@@ -142,10 +141,9 @@ img {
     <button onclick="mostrar('mercado')">Voltar</button>
 </div>
 
-<!-- MAPA REAL -->
+<!-- MAPA -->
 <div id="mapa" class="tela">
-    <h2>📍 Negociação no Cafunfo</h2>
-
+    <h2>📍 Negociação Cafunfo</h2>
     <div id="mapaReal" style="width:100%;height:300px;"></div>
 
     <p>🔴 Vendedor | 🟢 Você</p>
@@ -160,8 +158,8 @@ img {
 <script>
 let usuarioAtual = null;
 
-// TELAS
-function mostrar(id) {
+// TROCA TELA
+function mostrar(id){
     document.querySelectorAll(".tela").forEach(t => t.classList.remove("ativa"));
     document.getElementById(id).classList.add("ativa");
 
@@ -169,36 +167,53 @@ function mostrar(id) {
     if(id === "mercado") carregarProdutos();
 }
 
-// CONTA
-function criarConta() {
-    localStorage.setItem("numero", novoNumero.value);
-    localStorage.setItem("senha", novaSenha.value);
+// CRIAR CONTA
+function criarConta(){
+    let n = document.getElementById("novoNumero").value.trim();
+    let s = document.getElementById("novaSenha").value.trim();
+
+    if(!n || !s){
+        alert("Preenche tudo!");
+        return;
+    }
+
+    localStorage.setItem("numero", n);
+    localStorage.setItem("senha", s);
+
     alert("Conta criada!");
     mostrar('login');
 }
 
-function entrar() {
-    if(loginNumero.value === localStorage.getItem("numero") &&
-       loginSenha.value === localStorage.getItem("senha")) {
-        usuarioAtual = loginNumero.value;
+// LOGIN
+function entrar(){
+    let n = document.getElementById("loginNumero").value.trim();
+    let s = document.getElementById("loginSenha").value.trim();
+
+    let n2 = localStorage.getItem("numero");
+    let s2 = localStorage.getItem("senha");
+
+    if(n === n2 && s === s2){
+        usuarioAtual = n;
+        alert("Login feito!");
         mostrar('menu');
     } else {
-        alert("Erro!");
+        alert("Erro no login!");
     }
 }
 
-function logout() {
+function logout(){
     usuarioAtual = null;
     mostrar('inicio');
 }
 
-// PRODUTOS
-function publicarProduto() {
+// PUBLICAR
+function publicarProduto(){
     let file = fotoProduto.files[0];
     if(!file) return alert("Escolhe foto!");
 
     let reader = new FileReader();
-    reader.onload = function() {
+    reader.onload = function(){
+
         let produtos = JSON.parse(localStorage.getItem("produtos")) || [];
 
         produtos.push({
@@ -210,98 +225,56 @@ function publicarProduto() {
         });
 
         localStorage.setItem("produtos", JSON.stringify(produtos));
+
         alert("Publicado!");
         mostrar('mercado');
     };
+
     reader.readAsDataURL(file);
 }
 
-function carregarProdutos() {
+// MERCADO
+function carregarProdutos(){
     let lista = document.getElementById("lista");
     lista.innerHTML = "";
 
     let produtos = JSON.parse(localStorage.getItem("produtos")) || [];
 
-    produtos.forEach((p, i) => {
+    produtos.forEach((p,i)=>{
         let div = document.createElement("div");
         div.className = "produto";
         div.innerHTML = `<img src="${p.img}"><p>${p.nome}</p><p>${p.preco} kz</p>`;
-        div.onclick = () => verDetalhe(i);
+        div.onclick = ()=>verDetalhe(i);
         lista.appendChild(div);
     });
 }
 
-function verDetalhe(i) {
+// DETALHE
+function verDetalhe(i){
     let p = JSON.parse(localStorage.getItem("produtos"))[i];
 
     detNome.innerText = p.nome;
     detImg.src = p.img;
-    detPreco.innerText = p.preco + " kz";
+    detPreco.innerText = p.preco;
     detDesc.innerText = p.desc;
 
     mostrar('detalhe');
 }
 
-// MAPA REAL
-let mapa;
-let marcadorUsuario;
-let marcadorVendedor;
-let cafunfo = [-8.766, 17.283];
-
-function abrirMapa() {
-    mostrar('mapa');
-
-    setTimeout(() => {
-        if (!mapa) {
-            mapa = L.map('mapaReal').setView(cafunfo, 13);
-
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
-            .addTo(mapa);
-        }
-
-        navigator.geolocation.watchPosition(pos => {
-            let lat = pos.coords.latitude;
-            let lon = pos.coords.longitude;
-
-            if (marcadorUsuario) {
-                marcadorUsuario.setLatLng([lat, lon]);
-            } else {
-                marcadorUsuario = L.circleMarker([lat, lon], {color: 'green'})
-                .addTo(mapa).bindPopup("Você");
-            }
-
-            let vendedorPos = [cafunfo[0] + 0.01, cafunfo[1] + 0.01];
-
-            if (marcadorVendedor) {
-                marcadorVendedor.setLatLng(vendedorPos);
-            } else {
-                marcadorVendedor = L.circleMarker(vendedorPos, {color: 'red'})
-                .addTo(mapa).bindPopup("Vendedor");
-            }
-
-            let grupo = L.featureGroup([marcadorUsuario, marcadorVendedor]);
-            mapa.fitBounds(grupo.getBounds(), {padding:[50,50]});
-        });
-    }, 500);
-}
-
-function ligar() { alert("Ligando..."); }
-function mensagem() { alert("Mensagem..."); }
-
 // PERFIL
-function salvarFoto() {
+function salvarFoto(){
     let reader = new FileReader();
-    reader.onload = () => {
-        localStorage.setItem("fotoPerfil", reader.result);
+    reader.onload = ()=>{
+        localStorage.setItem("foto", reader.result);
         carregarPerfil();
     };
     reader.readAsDataURL(fotoPerfil.files[0]);
 }
 
-function carregarPerfil() {
+function carregarPerfil(){
     numPerfil.innerText = usuarioAtual;
 
-    let foto = localStorage.getItem("fotoPerfil");
+    let foto = localStorage.getItem("foto");
     if(foto) imgPerfil.src = foto;
 
     let lista = document.getElementById("meusProdutos");
@@ -309,8 +282,8 @@ function carregarPerfil() {
 
     let produtos = JSON.parse(localStorage.getItem("produtos")) || [];
 
-    produtos.forEach(p => {
-        if(p.dono === usuarioAtual) {
+    produtos.forEach(p=>{
+        if(p.dono === usuarioAtual){
             let div = document.createElement("div");
             div.className = "produto";
             div.innerHTML = `<img src="${p.img}"><p>${p.nome}</p>`;
@@ -318,6 +291,53 @@ function carregarPerfil() {
         }
     });
 }
+
+// MAPA
+let mapa, user, vendedor;
+let cafunfo = [-8.766, 17.283];
+
+function abrirMapa(){
+    mostrar('mapa');
+
+    setTimeout(()=>{
+
+        if(!mapa){
+            mapa = L.map('mapaReal').setView(cafunfo, 13);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
+            .addTo(mapa);
+        }
+
+        navigator.geolocation.watchPosition(pos=>{
+            let lat = pos.coords.latitude;
+            let lon = pos.coords.longitude;
+
+            if(user){
+                user.setLatLng([lat,lon]);
+            } else {
+                user = L.circleMarker([lat,lon], {color:"green"})
+                .addTo(mapa).bindPopup("Você");
+            }
+
+            let v = [cafunfo[0]+0.01, cafunfo[1]+0.01];
+
+            if(vendedor){
+                vendedor.setLatLng(v);
+            } else {
+                vendedor = L.circleMarker(v, {color:"red"})
+                .addTo(mapa).bindPopup("Vendedor");
+            }
+
+            let grupo = L.featureGroup([user,vendedor]);
+            mapa.fitBounds(grupo.getBounds(), {padding:[50,50]});
+
+        });
+
+    },500);
+}
+
+function ligar(){ alert("Ligando..."); }
+function mensagem(){ alert("Mensagem..."); }
 </script>
 
 </body>
