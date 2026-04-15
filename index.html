@@ -2,6 +2,7 @@
 <html lang="pt">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cafunfo Online</title>
 
 <style>
@@ -25,18 +26,20 @@ body {
 input {
     display: block;
     margin: 10px auto;
-    padding: 10px;
-    width: 220px;
+    padding: 12px;
+    width: 90%;
+    max-width: 300px;
 }
 
 button {
     display: block;
     margin: 10px auto;
-    padding: 12px;
-    width: 230px;
+    padding: 14px;
+    width: 90%;
+    max-width: 300px;
     border: none;
-    border-radius: 8px;
-    cursor: pointer;
+    border-radius: 10px;
+    font-size: 16px;
 }
 
 .verde { background: #00c853; color: white; }
@@ -48,13 +51,14 @@ button {
     border: 1px solid #444;
     margin: 10px;
     padding: 10px;
+    border-radius: 10px;
 }
 </style>
 </head>
 
 <body>
 
-<!-- TELA INICIAL -->
+<!-- INICIO -->
 <div id="inicio" class="tela ativa">
     <h1>🌍 Bem-vindo ao Cafunfo Online</h1>
 
@@ -89,8 +93,20 @@ button {
     <h2>📂 Menu</h2>
 
     <button class="laranja" onclick="mostrar('mercado')">🛒 Mercado</button>
+    <button class="verde" onclick="mostrar('publicar')">➕ Publicar Produto</button>
     <button class="roxo" onclick="mostrar('perfil')">👤 Perfil</button>
     <button onclick="logout()">Sair</button>
+</div>
+
+<!-- PUBLICAR PRODUTO -->
+<div id="publicar" class="tela">
+    <h2>📦 Publicar Produto</h2>
+
+    <input id="nomeProduto" placeholder="Nome do produto">
+    <input id="precoProduto" placeholder="Preço">
+
+    <button class="verde" onclick="publicarProduto()">Publicar</button>
+    <button onclick="mostrar('menu')">Voltar</button>
 </div>
 
 <!-- PERFIL -->
@@ -108,11 +124,7 @@ button {
 
     <input id="pesquisa" placeholder="Pesquisar..." onkeyup="filtrar()">
 
-    <div id="lista">
-        <div class="produto">📱 Telemóvel - 50.000kz</div>
-        <div class="produto">🏍 Motorizada - 200.000kz</div>
-        <div class="produto">👟 Ténis - 10.000kz</div>
-    </div>
+    <div id="lista"></div>
 
     <button onclick="mostrar('menu')">Voltar</button>
 </div>
@@ -129,6 +141,10 @@ function mostrar(id) {
     if(id === "perfil") {
         document.getElementById("numPerfil").innerText =
             localStorage.getItem("numero") || "Não logado";
+    }
+
+    if(id === "mercado") {
+        carregarProdutos();
     }
 }
 
@@ -158,8 +174,7 @@ function entrar() {
     let s2 = localStorage.getItem("senha");
 
     if(n === n2 && s === s2) {
-        document.getElementById("msgLogin").innerText = "Login feito!";
-        setTimeout(() => mostrar('menu'), 1000);
+        mostrar('menu');
     } else {
         document.getElementById("msgLogin").innerText = "Erro no login!";
     }
@@ -168,6 +183,44 @@ function entrar() {
 // LOGOUT
 function logout() {
     mostrar('inicio');
+}
+
+// PUBLICAR PRODUTO
+function publicarProduto() {
+    let nome = document.getElementById("nomeProduto").value;
+    let preco = document.getElementById("precoProduto").value;
+
+    if(nome === "" || preco === "") {
+        alert("Preenche tudo!");
+        return;
+    }
+
+    let produtos = JSON.parse(localStorage.getItem("produtos")) || [];
+
+    produtos.push({
+        nome: nome,
+        preco: preco
+    });
+
+    localStorage.setItem("produtos", JSON.stringify(produtos));
+
+    alert("Produto publicado!");
+    mostrar('mercado');
+}
+
+// CARREGAR PRODUTOS
+function carregarProdutos() {
+    let lista = document.getElementById("lista");
+    lista.innerHTML = "";
+
+    let produtos = JSON.parse(localStorage.getItem("produtos")) || [];
+
+    produtos.forEach(p => {
+        let div = document.createElement("div");
+        div.className = "produto";
+        div.innerText = p.nome + " - " + p.preco + " kz";
+        lista.appendChild(div);
+    });
 }
 
 // PESQUISA
